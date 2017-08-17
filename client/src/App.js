@@ -10,6 +10,16 @@ class App extends Component {
       chatLogs: []
     }
   }
+  getData () {
+    let chatLogs = this.state.chatLogs
+    fetch(`http://localhost:3001/api/v1/chats`)
+      .then(response => response.json())
+      .then(chats => {
+        this.setState({
+          chatLogs: chats
+        })
+      })
+  }
   updateCurrentChatMessage (message) {
     this.setState({
       currentChatMessage: message
@@ -47,6 +57,9 @@ class App extends Component {
   }
   componentWillMount () {
     this.createSocket()
+  }
+  componentDidMount () {
+    this.getData()
   }
   handleChatInputKyePress (e) {
     if (e.key === 'Enter') {
