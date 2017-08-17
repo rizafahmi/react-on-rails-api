@@ -6,7 +6,8 @@ class App extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      currentChatMessage: ''
+      currentChatMessage: '',
+      chatLogs: []
     }
   }
   updateCurrentChatMessage (message) {
@@ -23,7 +24,11 @@ class App extends Component {
       {
         connected: () => {},
         received: data => {
-          console.log(data)
+          let chatLogs = this.state.chatLogs
+          chatLogs.push(data)
+          this.setState({
+            chatLogs
+          })
         },
         create: chatContent => {
           this.chats.perform('create', {
@@ -43,18 +48,28 @@ class App extends Component {
   componentWillMount () {
     this.createSocket()
   }
+  handleChatInputKyePress (e) {
+    if (e.key === 'Enter') {
+      this.handleSendEvent(e)
+    }
+  }
   render () {
     return (
       <div className='App'>
         <div className='stage'>
           <h1>Chatter</h1>
-          <div className='chat-logs' />
+          <div className='chat-logs'>
+            <ul className='chat-logs'>
+              {this.renderChatLog()}
+            </ul>
+          </div>
           <input
             type='text'
             placeholder='Enter your message...'
             onChange={e => this.updateCurrentChatMessage(e.target.value)}
             className='chat-input'
             value={this.state.currentChatMessage}
+            onKeyPress={e => this.handleChatInputKyePress(e)}
           />
           <button onClick={e => this.handleSendEvent(e)} className='send'>
             Send
@@ -62,6 +77,16 @@ class App extends Component {
         </div>
       </div>
     )
+  }
+  renderChatLog () {
+    return this.state.chatLogs.map(el => {
+      return (
+        <li key={`chat_${el.id}`}>
+          <span className='chat-message'>{el.content}</span>
+          <span className='chat-created-at'>{el.created_at}</span>
+        </li>
+      )
+    })
   }
 }
 
