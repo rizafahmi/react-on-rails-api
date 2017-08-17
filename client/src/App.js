@@ -1,21 +1,68 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from 'react'
+import './App.css'
+import Cable from 'actioncable'
 
 class App extends Component {
-  render() {
+  constructor (props) {
+    super(props)
+    this.state = {
+      currentChatMessage: ''
+    }
+  }
+  updateCurrentChatMessage (message) {
+    this.setState({
+      currentChatMessage: message
+    })
+  }
+  createSocket () {
+    let cable = Cable.createConsumer('ws://localhost:3001/cable')
+    this.chats = cable.subscriptions.create(
+      {
+        channel: 'ChatChannel'
+      },
+      {
+        connected: () => {},
+        received: data => {
+          console.log(data)
+        },
+        create: chatContent => {
+          this.chats.perform('create', {
+            content: chatContent
+          })
+        }
+      }
+    )
+  }
+  handleSendEvent (e) {
+    e.preventDefault()
+    this.chats.create(this.state.currentChatMessage)
+    this.setState({
+      currentChatMessage: ''
+    })
+  }
+  componentWillMount () {
+    this.createSocket()
+  }
+  render () {
     return (
-      <div className="App">
-        <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to React</h2>
+      <div className='App'>
+        <div className='stage'>
+          <h1>Chatter</h1>
+          <div className='chat-logs' />
+          <input
+            type='text'
+            placeholder='Enter your message...'
+            onChange={e => this.updateCurrentChatMessage(e.target.value)}
+            className='chat-input'
+            value={this.state.currentChatMessage}
+          />
+          <button onClick={e => this.handleSendEvent(e)} className='send'>
+            Send
+          </button>
         </div>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
       </div>
-    );
+    )
   }
 }
 
-export default App;
+export default App
